@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getTVG } from './helpers';
 import type { Canvas } from '../src/core/Canvas';
 import type { Animation } from '../src/core/Animation';
+import type { Video } from '../src/core/media/Video';
+import videoUrl from './resources/video.webm?url';
 
 
 const isHappyDom = () => globalThis.__TEST_ENV === 'happy-dom';
@@ -147,6 +149,36 @@ describe('Scene containing Shape renders to canvas', () => {
   });
 
   it.skipIf(!canCheckPixels())('scene render writes non-zero pixels to canvas', () => {
+    expect(hasPixels(tc.el)).toBe(true);
+  });
+});
+
+
+describe('Video renders to canvas', () => {
+  let tc: TestCanvas;
+  let video: Video;
+
+  beforeAll(() => {
+    const TVG = getTVG();
+    tc = createTestCanvas();
+    video = new TVG.Video();
+    tc.tvg.add(video);
+  });
+
+  afterAll(() => {
+    tc.tvg.remove(video);
+    video.dispose();
+    destroyTestCanvas(tc);
+  });
+
+  it.skipIf(!canRender())('canvas.add(video) → Video.load() → play() draws a frame', async () => {
+    const bytes = new Uint8Array(await (await fetch(videoUrl)).arrayBuffer());
+    await video.load(bytes);
+    video.picture!.size(100, 100);
+    await new Promise<void>((resolve) => video.play(() => resolve()));
+  });
+
+  it.skipIf(!canCheckPixels())('video frame writes non-zero pixels to canvas', () => {
     expect(hasPixels(tc.el)).toBe(true);
   });
 });
