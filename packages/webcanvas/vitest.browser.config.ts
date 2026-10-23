@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import path from 'path';
-import { webWorkerStub } from './test/worker-stub';
+import { webWorker } from './test/worker-stub';
 
 const renderer = (process.env.TEST_RENDERER || 'wg') as 'wg' | 'gl' | 'sw';
 
@@ -11,10 +11,13 @@ const launchArgs =
   []; // sw: no GPU flags required
 
 export default defineConfig({
-  plugins: [webWorkerStub()],
+  plugins: [webWorker()],
   define: {
     __THREAD_SUPPORT__: false,
     __TEST_RENDERER: JSON.stringify(renderer),
+  },
+  optimizeDeps: {
+    include: ['mediabunny'], // only imported by the video worker, which the dependency scan skips
   },
   test: {
     browser: {
